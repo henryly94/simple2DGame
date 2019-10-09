@@ -13,6 +13,12 @@ public:
   void MainLoop();
 
 private:
+  void processInput();
+
+  void render();
+
+  void update();
+
   GLFWwindow *window_;
   int height_;
   int width_;
