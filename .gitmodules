@@ -2,3 +2,6 @@
   path = external/glfw
   url = git@github.com:glfw/glfw.git
 
+[submodule "external/abseil-cpp"]
+	path = external/abseil-cpp
+	url = git@github.com:abseil/abseil-cpp.git

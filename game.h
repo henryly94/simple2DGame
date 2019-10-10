@@ -2,9 +2,9 @@
 #define GAME_H
 
 #define GLFW_INCLUDE_NONE
+#include "game_item.h"
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
-#include "game_item.h"
 
 class Game {
 public:
@@ -23,7 +23,7 @@ private:
   GLFWwindow *window_;
   int height_;
   int width_;
-  std::vector<GameItem*> items_;
+  std::vector<GameItem *> items_;
 };
 
 #endif // GAME_H

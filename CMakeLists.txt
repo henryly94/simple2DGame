@@ -7,6 +7,7 @@ message(STATUS ${OPENGL_VERSION})
 include_directories(
   external/glfw/include
   external/glad/include
+  external/abseil-cpp
   ${OPENGL_INCLUDE_DIR}
 )
 
@@ -20,6 +21,7 @@ add_library(
 target_link_libraries(
   game
   glfw
+  absl::time
   ${OPENGL_gl_LIBRARY}
 )
 

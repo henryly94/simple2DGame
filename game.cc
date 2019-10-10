@@ -1,5 +1,7 @@
 #include "game.h"
 #include "circle.h"
+#include <absl/time/clock.h>
+#include <absl/time/time.h>
 #include <iostream>
 
 Game::Game() : height_(480), width_(640) {}
@@ -21,9 +23,10 @@ bool Game::Init() {
     return false;
   }
 
-  GameItem* item = Circle::factory::GetNewInstance(0.5f);
+  GameItem *item = Circle::factory::GetNewInstance(0.5f);
   items_.push_back(item);
-  GameItem* item2 = Circle::factory::GetNewInstance(0.1f);
+  items_[0]->ay_ = -0.1f;
+  GameItem *item2 = Circle::factory::GetNewInstance(0.1f);
   items_.push_back(item2);
   return true;
 }
@@ -47,20 +50,24 @@ void Game::processInput() {
     glfwSetWindowShouldClose(window_, true);
   }
   if (glfwGetKey(window_, GLFW_KEY_W) == GLFW_PRESS) {
-    items_[0]->vy_ += 0.01f;
-  } 
-  if (glfwGetKey(window_, GLFW_KEY_S) == GLFW_PRESS) {
-    items_[0]->vy_ -= 0.01f;
+    items_[0]->vy_ = 0.01f;
+  } else if (glfwGetKey(window_, GLFW_KEY_S) == GLFW_PRESS) {
+    items_[0]->vy_ = -0.01f;
   }
   if (glfwGetKey(window_, GLFW_KEY_A) == GLFW_PRESS) {
-    items_[0]->vx_ -= 0.01f;
-  }
-  if (glfwGetKey(window_, GLFW_KEY_D) == GLFW_PRESS) {
-    items_[0]->vx_ += 0.01f;
+    items_[0]->vx_ = -0.01f;
+  } else if (glfwGetKey(window_, GLFW_KEY_D) == GLFW_PRESS) {
+    items_[0]->vx_ = 0.01f;
   }
 }
 
 void Game::update() {
+  static absl::Time time = absl::Now();
+  static absl::Duration interval = absl::Milliseconds(33);
+  absl::Time new_time = absl::Now();
+  if (new_time - time < interval) {
+    return;
+  }
   items_[0]->x_ += items_[0]->vx_;
   items_[0]->y_ += items_[0]->vy_;
   items_[0]->vx_ = items_[0]->vy_ = 0;
@@ -72,12 +79,13 @@ void Game::update() {
   if (items_[1]->x_ > 1.0f) {
     items_[1]->x_ = -1.0f;
   }
+  time = new_time;
 }
 
 void Game::render() {
   glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);
-  for (const auto* item : items_) {
+  for (const auto *item : items_) {
     item->Draw();
   }
 }

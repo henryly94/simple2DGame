@@ -4,13 +4,14 @@
 #include "factory.h"
 
 class GameItem {
- public:
+public:
   using factory = Factory<GameItem>;
 
-  GameItem() : x_(0), y_(0), vx_(0), vy_(0){}
+  GameItem() : x_(0), y_(0), vx_(0), vy_(0), ax_(0), ay_(0) {}
   virtual void Draw() const = 0;
   float x_, y_;
   float vx_, vy_;
+  float ax_, ay_;
 };
 
 #endif // GAME_ITEM_H_
