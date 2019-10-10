@@ -12,7 +12,9 @@ class Circle : public GameItem {
 public:
   using factory = Factory<Circle>;
 
-  Circle(float radius) : radius_(radius) {}
+  Circle(float radius, float mass) : radius_(radius) {
+    m_ = mass > 0 ? mass : 1;
+  }
 
   void Draw() const override {
     glBegin(GL_LINE_LOOP);
@@ -26,7 +28,6 @@ public:
     glEnd();
   }
 
-protected:
   float radius_;
 };
 
