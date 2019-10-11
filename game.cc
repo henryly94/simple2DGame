@@ -3,6 +3,7 @@
 #include "line.h"
 #include "physics.h"
 #include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
 #include <absl/time/clock.h>
 #include <absl/time/time.h>
 #include <algorithm>
@@ -13,12 +14,12 @@ Game::Game() : height_(480), width_(640) {}
 
 Game::~Game() { glfwTerminate(); }
 
-void CollisionEntryFunc(GameItem *a, GameItem *b) {
+bool CollisionEntryFunc(GameItem *a, GameItem *b) {
   if (a->GetType() == GameItem::CIRCLE && b->GetType() == GameItem::CIRCLE) {
-    Collision((Circle *)a, (Circle *)b);
+    return Collision((Circle *)a, (Circle *)b);
   } else if (a->GetType() == GameItem::CIRCLE &&
              b->GetType() == GameItem::LINE) {
-    Collision((Circle *)a, (Line *)b);
+    return Collision((Circle *)a, (Line *)b);
   }
 }
 
@@ -38,6 +39,9 @@ bool Game::Init() {
   }
 
   GameItem *item = Circle::factory::GetNewInstance(0.1f, 1000);
+  item->r_ = 0.2f;
+  item->g_ = 0.7f;
+  item->b_ = 0.4f;
   items_.push_back(item);
   for (int i = 1; i < 6; i++) {
     Circle *new_item = Circle::factory::GetNewInstance(0.1f, 1);
@@ -55,6 +59,10 @@ bool Game::Init() {
   items_.push_back(line);
   line = Line::factory::GetNewInstance(0.9f, 0.9f, 0.9f, -0.9f);
   items_.push_back(line);
+  gate_ = Line::factory::GetNewInstance(-0.2, 0.9f, 0.2f, 0.9f);
+  gate_->b_ = gate_->g_ = 0;
+  items_.push_back(gate_);
+
   return true;
 }
 
@@ -91,36 +99,26 @@ void Game::processInput() {
 void Game::update() {
   static absl::Time time = absl::Now();
   static absl::Duration interval = absl::Milliseconds(10);
-  // static absl::flat_hash_map<GameItem *, absl::Time> last_update;
   absl::Time new_time = absl::Now();
   if (new_time - time < interval) {
     return;
   }
+  absl::flat_hash_set<GameItem *> to_be_removed;
   for (int i = 0; i < items_.size(); i++) {
-    /*
-    if (!last_update.contains(items_[i]) ||
-        new_time - last_update[items_[i]] >= absl::Milliseconds(20)) {
-      last_update[items_[i]] = new_time;
-    } else {
-      continue;
-    }
-    */
     for (int j = i + 1; j < items_.size(); j++) {
-      CollisionEntryFunc(items_[i], items_[j]);
-    }
-    /*
-    if (i > 0 && i < 6) {
-      if (items_[i]->x_ <= ((Circle *)items_[i])->radius_ - 1 ||
-          items_[i]->x_ >= 1 - ((Circle *)items_[i])->radius_) {
-        items_[i]->vx_ = -items_[i]->vx_;
-      }
-      if (items_[i]->y_ <= ((Circle *)items_[i])->radius_ - 1 ||
-          items_[i]->y_ >= 1 - ((Circle *)items_[i])->radius_) {
-        items_[i]->vy_ = -items_[i]->vy_;
+      if (CollisionEntryFunc(items_[i], items_[j])) {
+        if (items_[j] == gate_) {
+          to_be_removed.insert(items_[i]);
+        }
       }
     }
-    */
   }
+  items_.erase(std::remove_if(items_.begin(), items_.end(),
+                              [&](GameItem *item) {
+                                return to_be_removed.contains(item);
+                              }),
+               items_.end());
+  to_be_removed.clear();
   for (int i = 1; i < items_.size(); i++) {
     if (items_[i]->vx_ == 0 && items_[i]->vy_ == 0) {
       items_[i]->ax_ = items_[i]->ay_ = 0;

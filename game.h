@@ -3,6 +3,7 @@
 
 #define GLFW_INCLUDE_NONE
 #include "game_item.h"
+#include "line.h"
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 
@@ -24,6 +25,7 @@ private:
   int height_;
   int width_;
   std::vector<GameItem *> items_;
+  Line *gate_;
 };
 
 #endif // GAME_H

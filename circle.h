@@ -14,7 +14,7 @@ public:
 
   void Draw() const override {
     glBegin(GL_LINE_LOOP);
-    glColor3f(1.0f, 1.0f, 1.0f);
+    glColor3f(r_, g_, b_);
     for (int i = 0; i < 100; i++) {
       float theta = 2.0f * 3.1415926f * float(i) / 100.0f;
       float x = radius_ * std::cos(theta);

@@ -12,7 +12,7 @@ public:
 
   void Draw() const override {
     glBegin(GL_LINES);
-    glColor3f(1.0f, 1.0f, 1.0f);
+    glColor3f(r_, g_, b_);
     glVertex2f(x1_, y1_);
     glVertex2f(x2_, y2_);
     glEnd();
