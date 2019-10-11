@@ -22,6 +22,7 @@ target_link_libraries(
   game
   glfw
   absl::time
+  absl::flat_hash_map
   ${OPENGL_gl_LIBRARY}
 )
 

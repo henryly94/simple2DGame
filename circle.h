@@ -1,12 +1,8 @@
 #ifndef CIRCLE_H_
 #define CIRCLE_H_
 
-#define GLFW_INCLUDE_NONE
-#include "factory.h"
 #include "game_item.h"
-#include <GLFW/glfw3.h>
 #include <cmath>
-#include <glad/glad.h>
 
 class Circle : public GameItem {
 public:
@@ -27,6 +23,8 @@ public:
     }
     glEnd();
   }
+
+  Type GetType() const override { return CIRCLE; }
 
   float radius_;
 };
