@@ -10,7 +10,43 @@
 #include <cmath>
 #include <iostream>
 
-Game::Game() : height_(480), width_(640) {}
+namespace {
+
+void updateBall(GameItem *item) {
+  if (item->vx_ == 0 && item->vy_ == 0) {
+    item->ax_ = item->ay_ = 0;
+  } else {
+    float ai = 0.00008f;
+    float norm = std::sqrt(item->vx_ * item->vx_ + item->vy_ * item->vy_);
+    float cos = -item->vx_ / norm;
+    float sin = -item->vy_ / norm;
+    item->ax_ = ai * cos;
+    item->ay_ = ai * sin;
+  }
+  item->x_ += item->vx_;
+  item->y_ += item->vy_;
+  // Update Friction effect.
+  if (item->vx_ != 0) {
+    float new_vx = item->vx_ + item->ax_;
+    if (new_vx * item->vx_ < 0) {
+      item->vx_ = 0;
+    } else {
+      item->vx_ = new_vx;
+    }
+  }
+  if (item->vy_ != 0) {
+    float new_vy = item->vy_ + item->ay_;
+    if (new_vy * item->vy_ < 0) {
+      item->vy_ = 0;
+    } else {
+      item->vy_ = new_vy;
+    }
+  }
+}
+
+} // namespace
+
+Game::Game() : height_(640), width_(640) {}
 
 Game::~Game() { glfwTerminate(); }
 
@@ -21,6 +57,7 @@ bool CollisionEntryFunc(GameItem *a, GameItem *b) {
              b->GetType() == GameItem::LINE) {
     return Collision((Circle *)a, (Line *)b);
   }
+  return false;
 }
 
 bool Game::Init() {
@@ -38,31 +75,7 @@ bool Game::Init() {
     return false;
   }
 
-  GameItem *item = Circle::factory::GetNewInstance(0.1f, 1000);
-  item->r_ = 0.2f;
-  item->g_ = 0.7f;
-  item->b_ = 0.4f;
-  items_.push_back(item);
-  for (int i = 1; i < 6; i++) {
-    Circle *new_item = Circle::factory::GetNewInstance(0.1f, 1);
-    new_item->x_ = -0.9 + 0.3 * i;
-    new_item->y_ = 0.3f;
-    items_.push_back(new_item);
-  }
-
-  Line *line;
-  line = Line::factory::GetNewInstance(-0.9f, 0.9f, 0.9f, 0.9f);
-  items_.push_back(line);
-  line = Line::factory::GetNewInstance(-0.9f, -0.9f, 0.9f, -0.9f);
-  items_.push_back(line);
-  line = Line::factory::GetNewInstance(-0.9f, 0.9f, -0.9f, -0.9f);
-  items_.push_back(line);
-  line = Line::factory::GetNewInstance(0.9f, 0.9f, 0.9f, -0.9f);
-  items_.push_back(line);
-  gate_ = Line::factory::GetNewInstance(-0.2, 0.9f, 0.2f, 0.9f);
-  gate_->b_ = gate_->g_ = 0;
-  items_.push_back(gate_);
-
+  loadItems();
   return true;
 }
 
@@ -85,14 +98,27 @@ void Game::processInput() {
     glfwSetWindowShouldClose(window_, true);
   }
   if (glfwGetKey(window_, GLFW_KEY_W) == GLFW_PRESS) {
-    items_[0]->vy_ = 0.01f;
+    player1_->vy_ = 0.01f;
   } else if (glfwGetKey(window_, GLFW_KEY_S) == GLFW_PRESS) {
-    items_[0]->vy_ = -0.01f;
+    player1_->vy_ = -0.01f;
   }
   if (glfwGetKey(window_, GLFW_KEY_A) == GLFW_PRESS) {
-    items_[0]->vx_ = -0.01f;
+    player1_->vx_ = -0.01f;
   } else if (glfwGetKey(window_, GLFW_KEY_D) == GLFW_PRESS) {
-    items_[0]->vx_ = 0.01f;
+    player1_->vx_ = 0.01f;
+  }
+  if (glfwGetKey(window_, GLFW_KEY_UP) == GLFW_PRESS) {
+    player2_->vy_ = 0.01f;
+  } else if (glfwGetKey(window_, GLFW_KEY_DOWN) == GLFW_PRESS) {
+    player2_->vy_ = -0.01f;
+  }
+  if (glfwGetKey(window_, GLFW_KEY_LEFT) == GLFW_PRESS) {
+    player2_->vx_ = -0.01f;
+  } else if (glfwGetKey(window_, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+    player2_->vx_ = 0.01f;
+  }
+  if (glfwGetKey(window_, GLFW_KEY_R) == GLFW_PRESS) {
+    restoreItems();
   }
 }
 
@@ -105,63 +131,37 @@ void Game::update() {
   }
   absl::flat_hash_set<GameItem *> to_be_removed;
   for (int i = 0; i < items_.size(); i++) {
-    for (int j = i + 1; j < items_.size(); j++) {
-      if (CollisionEntryFunc(items_[i], items_[j])) {
-        if (items_[j] == gate_) {
-          to_be_removed.insert(items_[i]);
+    if (items_[i]->exist_) {
+      for (int j = i + 1; j < items_.size(); j++) {
+        if (items_[j]->exist_ && CollisionEntryFunc(items_[i], items_[j])) {
+          if (items_[i] == ball_) {
+            if (items_[j] == gate1_) {
+              to_be_removed.insert(items_[i]);
+            } else if (items_[j] == gate2_) {
+              to_be_removed.insert(items_[i]);
+            }
+          }
         }
       }
     }
   }
-  items_.erase(std::remove_if(items_.begin(), items_.end(),
-                              [&](GameItem *item) {
-                                return to_be_removed.contains(item);
-                              }),
-               items_.end());
+  for (auto *item : to_be_removed) {
+    item->exist_ = false;
+    item->visible_ = false;
+  }
   to_be_removed.clear();
-  for (int i = 1; i < items_.size(); i++) {
-    if (items_[i]->vx_ == 0 && items_[i]->vy_ == 0) {
-      items_[i]->ax_ = items_[i]->ay_ = 0;
-    } else {
-      float ai = 0.00005f;
-      float norm = std::sqrt(items_[i]->vx_ * items_[i]->vx_ +
-                             items_[i]->vy_ * items_[i]->vy_);
-      float cos = -items_[i]->vx_ / norm;
-      float sin = -items_[i]->vy_ / norm;
-      items_[i]->ax_ = ai * cos;
-      items_[i]->ay_ = ai * sin;
+  for (auto *item : items_) {
+    if (item->exist_) {
+      if (item == player1_ || item == player2_) {
+        item->x_ += item->vx_;
+        item->y_ += item->vy_;
+        item->vx_ = item->vy_ = 0;
+      } else if (item == ball_) {
+        updateBall(item);
+      }
     }
   }
-  items_[0]->x_ += items_[0]->vx_;
-  items_[0]->y_ += items_[0]->vy_;
-  items_[0]->vx_ = items_[0]->vy_ = 0;
 
-  for (int i = 1; i < items_.size(); i++) {
-    items_[i]->x_ += items_[i]->vx_;
-    items_[i]->y_ += items_[i]->vy_;
-    for (int j = i + 1; j < items_.size(); j++) {
-      float dx = items_[i]->x_ - items_[j]->x_;
-      float dy = items_[i]->y_ - items_[j]->y_;
-      float distance = std::sqrt(dx * dx + dy * dy);
-    }
-    // Update Friction effect.
-    if (items_[i]->vx_ != 0) {
-      float new_vx = items_[i]->vx_ + items_[i]->ax_;
-      if (new_vx * items_[i]->vx_ < 0) {
-        items_[i]->vx_ = 0;
-      } else {
-        items_[i]->vx_ = new_vx;
-      }
-    }
-    if (items_[i]->vy_ != 0) {
-      float new_vy = items_[i]->vy_ + items_[i]->ay_;
-      if (new_vy * items_[i]->vy_ < 0) {
-        items_[i]->vy_ = 0;
-      } else {
-        items_[i]->vy_ = new_vy;
-      }
-    }
-  }
   time = new_time;
 }
 
@@ -169,6 +169,58 @@ void Game::render() {
   glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);
   for (const auto *item : items_) {
-    item->Draw();
+    if (item->visible_) {
+      item->Draw();
+    }
   }
+}
+void Game::loadItems() {
+  player1_ = Circle::factory::GetNewInstance(0.1f, 1000);
+  player1_->r_ = 0.8f;
+  player1_->g_ = 0.2f;
+  player1_->b_ = 0.3f;
+  player1_->y_ = 0.5f;
+  player1_->group_ = GameItem::PLAYER;
+  items_.push_back(player1_);
+
+  player2_ = Circle::factory::GetNewInstance(0.1f, 1000);
+  player2_->r_ = 0.7f;
+  player2_->g_ = 0.9f;
+  player2_->b_ = 0.2f;
+  player2_->group_ = GameItem::PLAYER;
+  player2_->y_ = -0.5f;
+  items_.push_back(player2_);
+
+  ball_ = Circle::factory::GetNewInstance(0.1f, 1);
+  ball_->x_ = 0.0f;
+  ball_->y_ = 0.0f;
+  ball_->group_ = GameItem::SCENE;
+  items_.push_back(ball_);
+
+  Line *line;
+  line = Line::factory::GetNewInstance(-0.9f, 0.9f, 0.9f, 0.9f);
+  items_.push_back(line);
+  line = Line::factory::GetNewInstance(-0.9f, -0.9f, 0.9f, -0.9f);
+  items_.push_back(line);
+  line = Line::factory::GetNewInstance(-0.9f, 0.9f, -0.9f, -0.9f);
+  items_.push_back(line);
+  line = Line::factory::GetNewInstance(0.9f, 0.9f, 0.9f, -0.9f);
+  items_.push_back(line);
+  gate1_ = Line::factory::GetNewInstance(-0.2, 0.9f, 0.2f, 0.9f);
+  gate1_->b_ = gate1_->g_ = 0;
+  items_.push_back(gate1_);
+  gate2_ = Line::factory::GetNewInstance(-0.2, -0.9f, 0.2f, -0.9f);
+  gate2_->b_ = gate2_->g_ = 0;
+  items_.push_back(gate2_);
+}
+
+void Game::restoreItems() {
+  ball_->x_ = 0.0f;
+  ball_->y_ = 0.0f;
+  ball_->exist_ = true;
+  ball_->visible_ = true;
+  player1_->x_ = 0.0f;
+  player1_->y_ = 0.5f;
+  player2_->x_ = 0.0f;
+  player2_->y_ = -0.5f;
 }
