@@ -1,13 +1,9 @@
 #ifndef GAME_H
 #define GAME_H
 
-#define GLFW_INCLUDE_NONE
 #include "circle.h"
-#include "game_item.h"
+#include "letter.h"
 #include "line.h"
-#include <GLFW/glfw3.h>
-#include <glad/glad.h>
-
 class Game {
 public:
   Game();
@@ -31,6 +27,7 @@ private:
   std::vector<GameItem *> items_;
   Circle *player1_, *player2_, *ball_;
   Line *gate1_, *gate2_;
+  Letter *point1_, *point2_;
 };
 
 #endif // GAME_H

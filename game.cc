@@ -1,5 +1,6 @@
 #include "game.h"
 #include "circle.h"
+#include "letter.h"
 #include "line.h"
 #include "physics.h"
 #include <absl/container/flat_hash_map.h>
@@ -62,6 +63,10 @@ bool CollisionEntryFunc(GameItem *a, GameItem *b) {
 
 bool Game::Init() {
   glfwInit();
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
   window_ = glfwCreateWindow(width_, height_, "Main", NULL, NULL);
   if (window_ == NULL) {
     glfwTerminate();
@@ -75,6 +80,8 @@ bool Game::Init() {
     return false;
   }
 
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   loadItems();
   return true;
 }
@@ -137,8 +144,12 @@ void Game::update() {
           if (items_[i] == ball_) {
             if (items_[j] == gate1_) {
               to_be_removed.insert(items_[i]);
+              point2_->ch_ += 1;
+              point2_->UpdateChar();
             } else if (items_[j] == gate2_) {
               to_be_removed.insert(items_[i]);
+              point1_->ch_ += 1;
+              point1_->UpdateChar();
             }
           }
         }
@@ -166,7 +177,7 @@ void Game::update() {
 }
 
 void Game::render() {
-  glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+  glClearColor(0.25f, 0.75f, 0.45f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);
   for (const auto *item : items_) {
     if (item->visible_) {
@@ -174,44 +185,57 @@ void Game::render() {
     }
   }
 }
+
 void Game::loadItems() {
   player1_ = Circle::factory::GetNewInstance(0.1f, 1000);
-  player1_->r_ = 0.8f;
-  player1_->g_ = 0.2f;
-  player1_->b_ = 0.3f;
+  player1_->r_ = 0.93f;
+  player1_->g_ = 0.39f;
+  player1_->b_ = 0.39f;
   player1_->y_ = 0.5f;
+  player1_->x_ = 0.1;
   player1_->group_ = GameItem::PLAYER;
   items_.push_back(player1_);
 
   player2_ = Circle::factory::GetNewInstance(0.1f, 1000);
-  player2_->r_ = 0.7f;
-  player2_->g_ = 0.9f;
-  player2_->b_ = 0.2f;
+  player2_->r_ = 0.55f;
+  player2_->g_ = 0.95f;
+  player2_->b_ = 1.0f;
   player2_->group_ = GameItem::PLAYER;
   player2_->y_ = -0.5f;
+  player2_->x_ = 0.1f;
   items_.push_back(player2_);
 
   ball_ = Circle::factory::GetNewInstance(0.1f, 1);
-  ball_->x_ = 0.0f;
   ball_->y_ = 0.0f;
+  ball_->x_ = 0.1f;
   ball_->group_ = GameItem::SCENE;
   items_.push_back(ball_);
 
   Line *line;
-  line = Line::factory::GetNewInstance(-0.9f, 0.9f, 0.9f, 0.9f);
+  line = Line::factory::GetNewInstance(-0.7f, 0.9f, 0.9f, 0.9f);
   items_.push_back(line);
-  line = Line::factory::GetNewInstance(-0.9f, -0.9f, 0.9f, -0.9f);
+  line = Line::factory::GetNewInstance(-0.7f, -0.9f, 0.9f, -0.9f);
   items_.push_back(line);
-  line = Line::factory::GetNewInstance(-0.9f, 0.9f, -0.9f, -0.9f);
+  line = Line::factory::GetNewInstance(-0.7f, 0.9f, -0.7f, -0.9f);
   items_.push_back(line);
   line = Line::factory::GetNewInstance(0.9f, 0.9f, 0.9f, -0.9f);
   items_.push_back(line);
-  gate1_ = Line::factory::GetNewInstance(-0.2, 0.9f, 0.2f, 0.9f);
-  gate1_->b_ = gate1_->g_ = 0;
+  line = Line::factory::GetNewInstance(-0.7f, 0.0f, 0.9f, 0.0f);
+  line->exist_ = false;
+  items_.push_back(line);
+  gate1_ = Line::factory::GetNewInstance(-0.1f, 0.9f, 0.3f, 0.9f);
+  gate1_->b_ = gate1_->g_ = gate1_->r_ = 0;
   items_.push_back(gate1_);
-  gate2_ = Line::factory::GetNewInstance(-0.2, -0.9f, 0.2f, -0.9f);
-  gate2_->b_ = gate2_->g_ = 0;
+  gate2_ = Line::factory::GetNewInstance(-0.1f, -0.9f, 0.3f, -0.9f);
+  gate2_->b_ = gate2_->g_ = gate2_->r_ = 0;
   items_.push_back(gate2_);
+
+  point1_ = Letter::factory::GetNewInstance('0', -0.85f, 0.8f, 0.15f, 0.2f);
+  point1_->r_ = point1_->g_ = point1_->b_ = 1.0f;
+  point2_ = Letter::factory::GetNewInstance('0', -0.85f, -0.8f, 0.15f, 0.2f);
+  point2_->r_ = point2_->g_ = point2_->b_ = 1.0f;
+  items_.push_back(point1_);
+  items_.push_back(point2_);
 }
 
 void Game::restoreItems() {

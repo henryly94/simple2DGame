@@ -5,3 +5,6 @@
 [submodule "external/abseil-cpp"]
 	path = external/abseil-cpp
 	url = git@github.com:abseil/abseil-cpp.git
+[submodule "external/freetype2"]
+	path = external/freetype2
+	url = git://git.sv.nongnu.org/freetype/freetype2.git
