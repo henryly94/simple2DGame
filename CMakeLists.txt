@@ -16,12 +16,24 @@ include_directories(
 )
 
 add_library(
+    game_scene
+    game_scene.cc
+)
+target_link_libraries(
+  game_scene
+  glfw
+  ${OPENGL_gl_LIBRARY}
+  freetype
+)
+
+add_library(
   game
   game.cc
   external/glad/src/glad.c
 )
 target_link_libraries(
   game
+  game_scene
   glfw
   absl::time
   absl::flat_hash_map

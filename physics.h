@@ -34,8 +34,8 @@ template <> bool Collision(Circle *c1, Circle *c2) {
     return true;
 
   float m1_m2 = c1->m_ + c2->m_;
-  float v1p_t = v1p - ((2 * c2->m_) / (m1_m2)) * (v1p - v2p);
-  float v2p_t = v2p - ((2 * c1->m_) / (m1_m2)) * (v2p - v1p);
+  float v1p_t = v1p - ((1.8 * c2->m_) / (m1_m2)) * (v1p - v2p);
+  float v2p_t = v2p - ((1.8 * c1->m_) / (m1_m2)) * (v2p - v1p);
 
   float v1p_t_x = v1p_t * dx;
   float v1p_t_y = v1p_t * dy;
@@ -86,8 +86,8 @@ template <> bool Collision(Circle *c, Line *l) {
   float v_v_x = c->vx_ - v_p_x;
   float v_v_y = c->vy_ - v_p_y;
 
-  float v_p_x_t = -v_p_x;
-  float v_p_y_t = -v_p_y;
+  float v_p_x_t = -0.9 * v_p_x;
+  float v_p_y_t = -0.9 * v_p_y;
   c->vx_ = v_p_x_t + v_v_x;
   c->vy_ = v_p_y_t + v_v_y;
   return true;

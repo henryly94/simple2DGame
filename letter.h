@@ -86,7 +86,6 @@ private:
       FT_Init_FreeType(&library); // 初始化 返回0为成功:w
       FT_Face face;
       int error = FT_New_Face(library, "../resource/Consolas.ttf", 0, &face);
-      std::cout << error << std::endl;
       FT_Set_Pixel_Sizes(face, 0, 128); // 设立字体为16px
       return face;
     }();

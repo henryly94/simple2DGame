@@ -1,9 +1,8 @@
 #ifndef GAME_H
 #define GAME_H
 
-#include "circle.h"
-#include "letter.h"
-#include "line.h"
+#include "scene.h"
+
 class Game {
 public:
   Game();
@@ -18,16 +17,13 @@ private:
 
   void update();
 
-  void loadItems();
-  void restoreItems();
+  void loadScenes();
 
   GLFWwindow *window_;
   int height_;
   int width_;
-  std::vector<GameItem *> items_;
-  Circle *player1_, *player2_, *ball_;
-  Line *gate1_, *gate2_;
-  Letter *point1_, *point2_;
+  std::vector<Scene *> scenes_;
+  Scene *current_scene_;
 };
 
 #endif // GAME_H
