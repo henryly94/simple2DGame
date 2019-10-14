@@ -1,5 +1,6 @@
 #include "game.h"
 #include "game_scene.h"
+#include "welcome_scene.h"
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
 #include <absl/time/clock.h>
@@ -60,6 +61,17 @@ void Game::processInput() {
   if (glfwGetKey(window_, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window_, true);
   }
+  static bool not_pressed_space = true;
+  if (glfwGetKey(window_, GLFW_KEY_SPACE) == GLFW_PRESS) {
+    static int index = 1;
+    if (not_pressed_space) {
+      current_scene_ = scenes_[index];
+      index = 1 - index;
+      not_pressed_space = false;
+    }
+  } else {
+    not_pressed_space = true;
+  }
   current_scene_->ProcessInput();
 }
 
@@ -77,7 +89,9 @@ void Game::update() {
 void Game::render() { current_scene_->Draw(); }
 
 void Game::loadScenes() {
+  WelcomeScene *welcomeScene = new WelcomeScene(window_);
+  scenes_.push_back(welcomeScene);
   GameScene *gameScene = new GameScene(window_);
   scenes_.push_back(gameScene);
-  current_scene_ = gameScene;
+  current_scene_ = welcomeScene;
 }
