@@ -11,8 +11,6 @@ class GameScene : public Scene {
 public:
   GameScene(GLFWwindow *window);
 
-  void Draw() const override;
-
   void ProcessInput() override;
 
   void Update() override;
@@ -21,7 +19,6 @@ public:
 
   void restoreItems();
 
-  std::vector<GameItem *> items_;
   Circle *player1_, *player2_, *ball_;
   Line *gate1_, *gate2_;
   Letter *point1_, *point2_;

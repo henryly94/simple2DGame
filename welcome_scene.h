@@ -17,15 +17,9 @@ public:
       letter->b_ = 0.2f;
       x += 0.2f;
       letters_.push_back(letter);
+      items_.push_back(letter);
     }
-  }
-
-  void Draw() const override {
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    for (const auto *letter : letters_) {
-      letter->Draw();
-    }
+    r_ = g_ = b_ = 0.0f;
   }
 
   void Update() override {}

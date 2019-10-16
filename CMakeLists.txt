@@ -16,6 +16,41 @@ include_directories(
 )
 
 add_library(
+    shader
+    shader.cc
+)
+target_link_libraries(
+    shader
+    absl::flat_hash_map
+    absl::strings
+    glfw
+    ${OPENGL_gl_LIBRARY}
+)
+
+add_library(
+    texture
+    texture.cc
+)
+target_link_libraries(
+    texture
+    absl::flat_hash_map
+    absl::strings
+    glfw
+    ${OPENGL_gl_LIBRARY}
+)
+
+add_library(
+    renderer
+    renderer.cc
+)
+target_link_libraries(
+    renderer
+    absl::strings
+    absl::flat_hash_map
+)
+
+
+add_library(
     game_scene
     game_scene.cc
 )
@@ -34,6 +69,9 @@ add_library(
 target_link_libraries(
   game
   game_scene
+  renderer
+  texture
+  shader
   glfw
   absl::time
   absl::flat_hash_map

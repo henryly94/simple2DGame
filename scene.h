@@ -2,6 +2,7 @@
 #define SCENE_H_
 
 #include "game_item.h"
+#include <vector>
 
 class Scene {
 public:
@@ -9,11 +10,13 @@ public:
 
   virtual ~Scene(){};
 
-  virtual void Draw() const = 0;
-
   virtual void ProcessInput() = 0;
 
   virtual void Update() = 0;
+
+  std::vector<GameItem *> items_;
+
+  float r_, g_, b_;
 
 protected:
   GLFWwindow *window_;

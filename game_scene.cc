@@ -47,16 +47,11 @@ void updateBall(GameItem *item) {
 
 } // namespace
 
-GameScene::GameScene(GLFWwindow *window) : Scene(window) { loadItems(); }
-
-void GameScene::Draw() const {
-  glClearColor(0.25f, 0.75f, 0.45f, 1.0f);
-  glClear(GL_COLOR_BUFFER_BIT);
-  for (const auto *item : items_) {
-    if (item->visible_) {
-      item->Draw();
-    }
-  }
+GameScene::GameScene(GLFWwindow *window) : Scene(window) {
+  r_ = 0.25f;
+  g_ = 0.75f;
+  b_ = 0.45f;
+  loadItems();
 }
 
 void GameScene::ProcessInput() {
@@ -95,11 +90,11 @@ void GameScene::Update() {
             if (items_[j] == gate1_) {
               to_be_removed.insert(items_[i]);
               point2_->ch_ += 1;
-              point2_->UpdateChar();
+              point2_->texture_id_ = std::string{1, point2_->ch_};
             } else if (items_[j] == gate2_) {
               to_be_removed.insert(items_[i]);
               point1_->ch_ += 1;
-              point1_->UpdateChar();
+              point1_->texture_id_ = std::string{1, point1_->ch_};
             }
           }
         }
@@ -149,6 +144,13 @@ void GameScene::loadItems() {
   ball_->group_ = GameItem::SCENE;
   items_.push_back(ball_);
 
+  gate1_ = Line::factory::GetNewInstance(-0.1f, 0.9f, 0.3f, 0.9f);
+  gate1_->b_ = gate1_->g_ = gate1_->r_ = 0;
+  items_.push_back(gate1_);
+  gate2_ = Line::factory::GetNewInstance(-0.1f, -0.9f, 0.3f, -0.9f);
+  gate2_->b_ = gate2_->g_ = gate2_->r_ = 0;
+  items_.push_back(gate2_);
+
   Line *line;
   line = Line::factory::GetNewInstance(-0.7f, 0.9f, 0.9f, 0.9f);
   items_.push_back(line);
@@ -161,12 +163,6 @@ void GameScene::loadItems() {
   line = Line::factory::GetNewInstance(-0.7f, 0.0f, 0.9f, 0.0f);
   line->exist_ = false;
   items_.push_back(line);
-  gate1_ = Line::factory::GetNewInstance(-0.1f, 0.9f, 0.3f, 0.9f);
-  gate1_->b_ = gate1_->g_ = gate1_->r_ = 0;
-  items_.push_back(gate1_);
-  gate2_ = Line::factory::GetNewInstance(-0.1f, -0.9f, 0.3f, -0.9f);
-  gate2_->b_ = gate2_->g_ = gate2_->r_ = 0;
-  items_.push_back(gate2_);
 
   point1_ = Letter::factory::GetNewInstance('0', -0.85f, 0.8f, 0.15f, 0.2f);
   point1_->r_ = point1_->g_ = point1_->b_ = 1.0f;

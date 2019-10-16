@@ -1,6 +1,7 @@
 #ifndef GAME_H
 #define GAME_H
 
+#include "renderer.h"
 #include "scene.h"
 
 class Game {
@@ -19,10 +20,11 @@ private:
 
   void loadScenes();
 
-  GLFWwindow *window_;
   int height_;
   int width_;
   std::vector<Scene *> scenes_;
+  GLFWwindow *window_;
+  Renderer *renderer_;
   Scene *current_scene_;
 };
 

@@ -9,13 +9,25 @@
 #include <cmath>
 #include <iostream>
 
+#include "shader.h"
+#include "texture.h"
+
+#include <ft2build.h>
+
+#include <freetype/freetype.h>
+#include <freetype/ftglyph.h>
+#include <freetype/ftoutln.h>
+#include <freetype/fttrigon.h>
+#include FT_FREETYPE_H
+
 Game::Game() : height_(640), width_(640) {}
 
 Game::~Game() {
-  glfwTerminate();
   for (auto *scene : scenes_) {
     delete scene;
   }
+  delete renderer_;
+  glfwTerminate();
 }
 
 bool Game::Init() {
@@ -39,6 +51,24 @@ bool Game::Init() {
 
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+  renderer_ = new Renderer(window_);
+
+  Shader::Bind("simple", "../shaders/simple.vs", "../shaders/simple.fs");
+  Shader::Bind("letter", "../shaders/letter.vs", "../shaders/letter.fs");
+
+  FT_Library library;         // 声明了Lib
+  FT_Init_FreeType(&library); // 初始化 返回0为成功:w
+  FT_Face face;
+  int error = FT_New_Face(library, "../resource/Consolas.ttf", 0, &face);
+  FT_Set_Pixel_Sizes(face, 0, 128); // 设立字体为128px
+  for (char ch = 127; ch != 0; ch--) {
+    FT_Load_Char(face, ch, FT_LOAD_RENDER);
+    FT_GlyphSlot &slot = face->glyph; // 输出结果在 slot->bitmap
+    auto &bitmap = slot->bitmap;
+    Texture::Bind(std::string{1, ch}, bitmap.buffer, bitmap.width, bitmap.rows,
+                  GL_RED, GL_RED);
+  }
   loadScenes();
   return true;
 }
@@ -51,9 +81,6 @@ void Game::MainLoop() {
     update();
 
     render();
-
-    glfwSwapBuffers(window_);
-    glfwPollEvents();
   }
 }
 
@@ -67,6 +94,11 @@ void Game::processInput() {
     if (not_pressed_space) {
       current_scene_ = scenes_[index];
       index = 1 - index;
+      if (index == 0) {
+        renderer_->SwitchScene("game");
+      } else {
+        renderer_->SwitchScene("welcome");
+      }
       not_pressed_space = false;
     }
   } else {
@@ -86,7 +118,7 @@ void Game::update() {
   time = new_time;
 }
 
-void Game::render() { current_scene_->Draw(); }
+void Game::render() { renderer_->Render(); }
 
 void Game::loadScenes() {
   WelcomeScene *welcomeScene = new WelcomeScene(window_);
@@ -94,4 +126,7 @@ void Game::loadScenes() {
   GameScene *gameScene = new GameScene(window_);
   scenes_.push_back(gameScene);
   current_scene_ = welcomeScene;
+  renderer_->AddScene("welcome", welcomeScene);
+  renderer_->AddScene("game", gameScene);
+  renderer_->SwitchScene("welcome");
 }
