@@ -6,22 +6,22 @@
 #include "letter.h"
 #include "line.h"
 #include "scene.h"
+#include <boost/thread/mutex.hpp>
 
 class GameScene : public Scene {
 public:
   GameScene(GLFWwindow *window);
 
-  void ProcessInput() override;
-
-  void Update() override;
+  void Update(const UpdateProtos &update_protos) override;
 
   void loadItems();
 
-  void restoreItems();
+  void RestoreItems();
 
   Circle *player1_, *player2_, *ball_;
   Line *gate1_, *gate2_;
   Letter *point1_, *point2_;
+  boost::thread::mutex mu_;
 };
 
 #endif // GAME_SCENE_H_

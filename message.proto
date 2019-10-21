@@ -1,0 +1,29 @@
+syntax = "proto2";
+
+message PhysicsProto {
+  optional float x = 1;
+  optional float y = 2;
+  optional float vx = 3;
+  optional float vy = 4;
+  optional float ax = 5;
+  optional float ay = 6;
+}
+
+message DisplayProto {
+  optional float r = 1;
+  optional float g = 2;
+  optional float b = 3;
+  optional bool visible = 4;
+  optional string shader_id = 5;
+  optional string texture_id = 6;
+}
+
+message UpdateProto {
+  optional string id = 1;
+  oneof update {
+    PhysicsProto physics = 2;
+    DisplayProto display = 3;
+  }
+}
+
+message UpdateProtos { repeated UpdateProto updates = 1; }

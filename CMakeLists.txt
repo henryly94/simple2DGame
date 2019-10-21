@@ -5,15 +5,24 @@ set(CMAKE_CXX_STANDARD 17)
 find_package(OpenGL REQUIRED)
 message(STATUS ${OPENGL_VERSION})
 
-add_subdirectory(external)
+find_package(Boost REQUIRED thread)
+find_package(Protobuf REQUIRED)
+
+protobuf_generate_cpp(MESSAGE_SRC MESSAGE_HDR message.proto)
 
 include_directories(
   external/glfw/include
   external/glad/include
   external/abseil-cpp
   external/freetype2/include
+  ${Boost_INCLUDE_DIRS}
   ${OPENGL_INCLUDE_DIR}
+  ${CMAKE_CURRENT_BINARY_DIR}
 )
+
+#external/boost-asio/include
+
+add_subdirectory(external)
 
 add_library(
     shader
@@ -25,6 +34,15 @@ target_link_libraries(
     absl::strings
     glfw
     ${OPENGL_gl_LIBRARY}
+)
+
+add_library(
+  message_pb
+  ${MESSAGE_SRC}
+)
+target_link_libraries(
+  message_pb
+  ${PROTOBUF_LIBRARIES}
 )
 
 add_library(
@@ -47,8 +65,21 @@ target_link_libraries(
     renderer
     absl::strings
     absl::flat_hash_map
+    glfw
+    ${OPENGL_gl_LIBRARY}
 )
 
+add_library(
+  controller
+  controller.cc
+)
+target_link_libraries(
+  controller
+  message_pb
+  absl::flat_hash_map
+  glfw
+  ${OPENGL_gl_LIBRARY}
+)
 
 add_library(
     game_scene
@@ -57,6 +88,7 @@ add_library(
 target_link_libraries(
   game_scene
   glfw
+  message_pb
   ${OPENGL_gl_LIBRARY}
   freetype
 )
@@ -70,6 +102,7 @@ target_link_libraries(
   game
   game_scene
   renderer
+  controller
   texture
   shader
   glfw
@@ -87,3 +120,18 @@ target_link_libraries(
   main
   game
 )
+
+add_executable(
+  test_server
+  test_server.cc
+)
+target_link_libraries(
+  test_server
+  message_pb
+)
+
+add_executable(
+  test_client
+  test_client.cc
+)
+

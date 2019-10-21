@@ -2,6 +2,8 @@
 #define SCENE_H_
 
 #include "game_item.h"
+#include "message.pb.h"
+
 #include <vector>
 
 class Scene {
@@ -12,7 +14,7 @@ public:
 
   virtual void ProcessInput() = 0;
 
-  virtual void Update() = 0;
+  virtual void Update(const UpdateProtos &update_protos) = 0;
 
   std::vector<GameItem *> items_;
 

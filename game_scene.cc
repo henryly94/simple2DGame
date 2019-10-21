@@ -3,16 +3,6 @@
 
 namespace {
 
-bool CollisionEntryFunc(GameItem *a, GameItem *b) {
-  if (a->GetType() == GameItem::CIRCLE && b->GetType() == GameItem::CIRCLE) {
-    return Collision((Circle *)a, (Circle *)b);
-  } else if (a->GetType() == GameItem::CIRCLE &&
-             b->GetType() == GameItem::LINE) {
-    return Collision((Circle *)a, (Line *)b);
-  }
-  return false;
-}
-
 void updateBall(GameItem *item) {
   if (item->vx_ == 0 && item->vy_ == 0) {
     item->ax_ = item->ay_ = 0;
@@ -54,34 +44,23 @@ GameScene::GameScene(GLFWwindow *window) : Scene(window) {
   loadItems();
 }
 
-void GameScene::ProcessInput() {
-  if (glfwGetKey(window_, GLFW_KEY_W) == GLFW_PRESS) {
-    player1_->vy_ = 0.01f;
-  } else if (glfwGetKey(window_, GLFW_KEY_S) == GLFW_PRESS) {
-    player1_->vy_ = -0.01f;
-  }
-  if (glfwGetKey(window_, GLFW_KEY_A) == GLFW_PRESS) {
-    player1_->vx_ = -0.01f;
-  } else if (glfwGetKey(window_, GLFW_KEY_D) == GLFW_PRESS) {
-    player1_->vx_ = 0.01f;
-  }
-  if (glfwGetKey(window_, GLFW_KEY_UP) == GLFW_PRESS) {
-    player2_->vy_ = 0.01f;
-  } else if (glfwGetKey(window_, GLFW_KEY_DOWN) == GLFW_PRESS) {
-    player2_->vy_ = -0.01f;
-  }
-  if (glfwGetKey(window_, GLFW_KEY_LEFT) == GLFW_PRESS) {
-    player2_->vx_ = -0.01f;
-  } else if (glfwGetKey(window_, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-    player2_->vx_ = 0.01f;
-  }
+/*
   if (glfwGetKey(window_, GLFW_KEY_R) == GLFW_PRESS) {
-    restoreItems();
+    RestoreItems();
   }
-}
+*/
 
-void GameScene::Update() {
+void GameScene::Update(const UpdateProtos &update_protos) {
   absl::flat_hash_set<GameItem *> to_be_removed;
+  for (const auto update : update_protos.updates()) {
+    if (update.id() == "player1") {
+      player1_->vx_ = update.physics().vx();
+      player1_->vy_ = update.physics().vy();
+    } else if (update.id() == "player2") {
+      player2_->vx_ = update.physics().vx();
+      player2_->vy_ = update.physics().vy();
+    }
+  }
   for (int i = 0; i < items_.size(); i++) {
     if (items_[i]->exist_) {
       for (int j = i + 1; j < items_.size(); j++) {
@@ -106,6 +85,9 @@ void GameScene::Update() {
     item->visible_ = false;
   }
   to_be_removed.clear();
+
+  updateBall(ball_);
+
   for (auto *item : items_) {
     if (item->exist_) {
       if (item == player1_ || item == player2_) {
@@ -121,18 +103,14 @@ void GameScene::Update() {
 
 void GameScene::loadItems() {
   player1_ = Circle::factory::GetNewInstance(0.1f, 1000);
-  player1_->r_ = 0.93f;
-  player1_->g_ = 0.39f;
-  player1_->b_ = 0.39f;
+  player1_->color_ = {0.93f, 0.39f, 0.39f};
   player1_->y_ = 0.5f;
   player1_->x_ = 0.1;
   player1_->group_ = GameItem::PLAYER;
   items_.push_back(player1_);
 
   player2_ = Circle::factory::GetNewInstance(0.1f, 1000);
-  player2_->r_ = 0.55f;
-  player2_->g_ = 0.95f;
-  player2_->b_ = 1.0f;
+  player2_->color_ = {0.55f, 0.95f, 1.0f};
   player2_->group_ = GameItem::PLAYER;
   player2_->y_ = -0.5f;
   player2_->x_ = 0.1f;
@@ -145,10 +123,10 @@ void GameScene::loadItems() {
   items_.push_back(ball_);
 
   gate1_ = Line::factory::GetNewInstance(-0.1f, 0.9f, 0.3f, 0.9f);
-  gate1_->b_ = gate1_->g_ = gate1_->r_ = 0;
+  gate1_->color_ = {0.0f, 0.0f, 0.0f};
   items_.push_back(gate1_);
   gate2_ = Line::factory::GetNewInstance(-0.1f, -0.9f, 0.3f, -0.9f);
-  gate2_->b_ = gate2_->g_ = gate2_->r_ = 0;
+  gate2_->color_ = {0.0f, 0.0f, 0.0f};
   items_.push_back(gate2_);
 
   Line *line;
@@ -165,14 +143,12 @@ void GameScene::loadItems() {
   items_.push_back(line);
 
   point1_ = Letter::factory::GetNewInstance('0', -0.85f, 0.8f, 0.15f, 0.2f);
-  point1_->r_ = point1_->g_ = point1_->b_ = 1.0f;
   point2_ = Letter::factory::GetNewInstance('0', -0.85f, -0.8f, 0.15f, 0.2f);
-  point2_->r_ = point2_->g_ = point2_->b_ = 1.0f;
   items_.push_back(point1_);
   items_.push_back(point2_);
 }
 
-void GameScene::restoreItems() {
+void GameScene::RestoreItems() {
   ball_->x_ = 0.0f;
   ball_->y_ = 0.0f;
   ball_->exist_ = true;

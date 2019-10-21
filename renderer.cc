@@ -127,8 +127,9 @@ void Renderer::renderItem(const GameItem *item) {
   glUseProgram(shader_program);
   switch (item->GetType()) {
   case GameItem::CIRCLE:
-    glUniform3f(glGetUniformLocation(shader_program, "color"), item->r_,
-                item->g_, item->b_);
+    glUniform3f(glGetUniformLocation(shader_program, "color"),
+                item->color_.data[0], item->color_.data[1],
+                item->color_.data[2]);
     glUniform2f(glGetUniformLocation(shader_program, "pos"), item->x_,
                 item->y_);
     glBindVertexArray(getVAO(item));
@@ -136,8 +137,9 @@ void Renderer::renderItem(const GameItem *item) {
     glBindVertexArray(0);
     break;
   case GameItem::LINE:
-    glUniform3f(glGetUniformLocation(shader_program, "color"), item->r_,
-                item->g_, item->b_);
+    glUniform3f(glGetUniformLocation(shader_program, "color"),
+                item->color_.data[0], item->color_.data[1],
+                item->color_.data[2]);
     glUniform2f(glGetUniformLocation(shader_program, "pos"), 0, 0);
     glBindVertexArray(getVAO(item));
     glDrawArrays(GL_LINES, 0, 2);
@@ -146,8 +148,9 @@ void Renderer::renderItem(const GameItem *item) {
   case GameItem::LETTER:
     glUniform2f(glGetUniformLocation(shader_program, "pos"), item->x_,
                 item->y_);
-    glUniform3f(glGetUniformLocation(shader_program, "fontColor"), item->r_,
-                item->g_, item->b_);
+    glUniform3f(glGetUniformLocation(shader_program, "color"),
+                item->color_.data[0], item->color_.data[1],
+                item->color_.data[2]);
     glUniform1i(glGetUniformLocation(shader_program, "texture1"), 0);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, Texture::Get(item->texture_id_));

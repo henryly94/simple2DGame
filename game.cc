@@ -20,7 +20,7 @@
 #include <freetype/fttrigon.h>
 #include FT_FREETYPE_H
 
-Game::Game() : height_(640), width_(640) {}
+Game::Game(std::string &id) : height_(640), width_(640), id_(id) {}
 
 Game::~Game() {
   for (auto *scene : scenes_) {
@@ -31,6 +31,7 @@ Game::~Game() {
 }
 
 bool Game::Init() {
+  std::cout << "Here\n";
   glfwInit();
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -52,8 +53,11 @@ bool Game::Init() {
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+  std::cout << "Here\n";
   renderer_ = new Renderer(window_);
-
+  std::cout << "Here\n";
+  controller_ = new Controller(window_);
+  std::cout << "Here\n";
   Shader::Bind("simple", "../shaders/simple.vs", "../shaders/simple.fs");
   Shader::Bind("letter", "../shaders/letter.vs", "../shaders/letter.fs");
 
@@ -75,11 +79,13 @@ bool Game::Init() {
 
 void Game::MainLoop() {
   while (!glfwWindowShouldClose(window_)) {
+    controller_->ClearUpdates();
 
     processInput();
-
+    std::cout << "A\n";
     update();
 
+    std::cout << "B\n";
     render();
   }
 }
@@ -105,6 +111,8 @@ void Game::processInput() {
     not_pressed_space = true;
   }
   current_scene_->ProcessInput();
+  controller_->ProcessInput(id_);
+  // std::cout << controller_->update_protos_.DebugString() << "--------\n";
 }
 
 void Game::update() {
@@ -114,7 +122,7 @@ void Game::update() {
   if (new_time - time < interval) {
     return;
   }
-  current_scene_->Update();
+  current_scene_->Update(controller_->update_protos_);
   time = new_time;
 }
 

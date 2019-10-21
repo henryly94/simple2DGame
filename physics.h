@@ -95,4 +95,14 @@ template <> bool Collision(Circle *c, Line *l) {
 
 template <> bool Collision(Line *l, Circle *c) { return Collision(c, l); }
 
+bool CollisionEntryFunc(GameItem *a, GameItem *b) {
+  if (a->GetType() == GameItem::CIRCLE && b->GetType() == GameItem::CIRCLE) {
+    return Collision((Circle *)a, (Circle *)b);
+  } else if (a->GetType() == GameItem::CIRCLE &&
+             b->GetType() == GameItem::LINE) {
+    return Collision((Circle *)a, (Line *)b);
+  }
+  return false;
+}
+
 #endif // PHYSICS_H_
