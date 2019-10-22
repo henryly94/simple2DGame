@@ -4,6 +4,9 @@
 #include "line.h"
 #include "texture.h"
 
+#include <boost/bind.hpp>
+#include <boost/thread/mutex.hpp>
+
 namespace {
 
 unsigned int BindCircleVAO(float radius) {
@@ -65,7 +68,11 @@ unsigned int BindLetterVAO(char ch, float w, float h) {
 
 } // namespace
 
-Renderer::Renderer(GLFWwindow *window) : window_(window) {}
+Renderer::Renderer(GLFWwindow *window, boost::asio::io_context *io)
+    : window_(window), io_(io),
+      timer_(*io_, boost::asio::chrono::milliseconds(160)), live_(true) {
+  timer_.async_wait(boost::bind(&Renderer::Render, this));
+}
 
 Renderer::~Renderer() {}
 
@@ -81,16 +88,25 @@ void Renderer::SwitchScene(absl::string_view scene_name) {
 }
 
 void Renderer::Render() {
-  if (current_scene_ != nullptr) {
-    glClearColor(current_scene_->r_, current_scene_->g_, current_scene_->b_,
-                 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    for (auto it = current_scene_->items_.crbegin();
-         it != current_scene_->items_.crend(); it++) {
-      renderItem(*it);
+  std::cout << "Renderer\n";
+  if (live_) {
+    if (current_scene_ != nullptr) {
+      std::cout << "q\n";
+      // boost::mutex::scoped_lock(current_scene_->mu_);
+      std::cout << "x\n";
+      glClearColor(current_scene_->bg_color_.data[0],
+                   current_scene_->bg_color_.data[1],
+                   current_scene_->bg_color_.data[2], 1.0f);
+      glClear(GL_COLOR_BUFFER_BIT);
+      for (auto it = current_scene_->items_.crbegin();
+           it != current_scene_->items_.crend(); it++) {
+        renderItem(*it);
+      }
+      glfwSwapBuffers(window_);
+      glfwPollEvents();
     }
-    glfwSwapBuffers(window_);
-    glfwPollEvents();
+    timer_.expires_at(timer_.expiry() + boost::asio::chrono::milliseconds(33));
+    timer_.async_wait(boost::bind(&Renderer::Render, this));
   }
 }
 
@@ -164,3 +180,5 @@ void Renderer::renderItem(const GameItem *item) {
     break;
   };
 }
+
+void Renderer::Stop() { live_ = false; }

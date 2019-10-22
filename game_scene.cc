@@ -37,10 +37,8 @@ void updateBall(GameItem *item) {
 
 } // namespace
 
-GameScene::GameScene(GLFWwindow *window) : Scene(window) {
-  r_ = 0.25f;
-  g_ = 0.75f;
-  b_ = 0.45f;
+GameScene::GameScene() : Scene() {
+  bg_color_ = {0.25f, 0.75f, 0.45f};
   loadItems();
 }
 

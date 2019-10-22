@@ -108,6 +108,7 @@ target_link_libraries(
   glfw
   absl::time
   absl::flat_hash_map
+  ${Boost_LIBRARIES}
   ${OPENGL_gl_LIBRARY}
   freetype
 )

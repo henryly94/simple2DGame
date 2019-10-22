@@ -20,7 +20,8 @@
 #include <freetype/fttrigon.h>
 #include FT_FREETYPE_H
 
-Game::Game(std::string &id) : height_(640), width_(640), id_(id) {}
+Game::Game(std::string &id)
+    : height_(640), width_(640), id_(id), network_io_(), render_io_() {}
 
 Game::~Game() {
   for (auto *scene : scenes_) {
@@ -31,7 +32,6 @@ Game::~Game() {
 }
 
 bool Game::Init() {
-  std::cout << "Here\n";
   glfwInit();
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -53,11 +53,8 @@ bool Game::Init() {
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  std::cout << "Here\n";
-  renderer_ = new Renderer(window_);
-  std::cout << "Here\n";
-  controller_ = new Controller(window_);
-  std::cout << "Here\n";
+  renderer_ = new Renderer(window_, &render_io_);
+  controller_ = new Controller(window_, &network_io_, id_);
   Shader::Bind("simple", "../shaders/simple.vs", "../shaders/simple.fs");
   Shader::Bind("letter", "../shaders/letter.vs", "../shaders/letter.fs");
 
@@ -78,16 +75,20 @@ bool Game::Init() {
 }
 
 void Game::MainLoop() {
+  network_thread_ptr_ = new boost::thread(
+      boost::bind(&boost::asio::io_context::run, &network_io_));
+  render_thread_ptr_ = new boost::thread(
+      boost::bind(&boost::asio::io_context::run, &render_io_));
+  std::cout << "Here\n";
   while (!glfwWindowShouldClose(window_)) {
-    controller_->ClearUpdates();
-
     processInput();
-    std::cout << "A\n";
-    update();
-
-    std::cout << "B\n";
-    render();
   }
+  renderer_->Stop();
+  controller_->Stop();
+  network_thread_ptr_->join();
+  render_thread_ptr_->join();
+  delete network_thread_ptr_;
+  delete render_thread_ptr_;
 }
 
 void Game::processInput() {
@@ -110,9 +111,6 @@ void Game::processInput() {
   } else {
     not_pressed_space = true;
   }
-  current_scene_->ProcessInput();
-  controller_->ProcessInput(id_);
-  // std::cout << controller_->update_protos_.DebugString() << "--------\n";
 }
 
 void Game::update() {
@@ -129,9 +127,9 @@ void Game::update() {
 void Game::render() { renderer_->Render(); }
 
 void Game::loadScenes() {
-  WelcomeScene *welcomeScene = new WelcomeScene(window_);
+  WelcomeScene *welcomeScene = new WelcomeScene();
   scenes_.push_back(welcomeScene);
-  GameScene *gameScene = new GameScene(window_);
+  GameScene *gameScene = new GameScene();
   scenes_.push_back(gameScene);
   current_scene_ = welcomeScene;
   renderer_->AddScene("welcome", welcomeScene);

@@ -2,26 +2,25 @@
 #define SCENE_H_
 
 #include "game_item.h"
+#include "math.h"
 #include "message.pb.h"
 
+#include <boost/thread/mutex.hpp>
 #include <vector>
 
 class Scene {
 public:
-  Scene(GLFWwindow *window) : window_(window){};
+  Scene() : mu_(){};
 
   virtual ~Scene(){};
-
-  virtual void ProcessInput() = 0;
 
   virtual void Update(const UpdateProtos &update_protos) = 0;
 
   std::vector<GameItem *> items_;
 
-  float r_, g_, b_;
+  boost::mutex mu_;
 
-protected:
-  GLFWwindow *window_;
+  Vec3 bg_color_;
 };
 
 #endif // SCENE_H_

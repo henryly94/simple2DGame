@@ -6,6 +6,10 @@
 #include "controller.h"
 #include "renderer.h"
 #include "scene.h"
+
+#include <boost/asio.hpp>
+#include <boost/thread/thread.hpp>
+
 class Game {
 public:
   Game(std::string &id);
@@ -30,6 +34,9 @@ private:
   Renderer *renderer_;
   Controller *controller_;
   Scene *current_scene_;
+
+  boost::asio::io_context network_io_, render_io_;
+  boost::thread *network_thread_ptr_, *render_thread_ptr_;
 };
 
 #endif // GAME_H

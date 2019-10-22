@@ -8,7 +8,7 @@
 
 class WelcomeScene : public Scene {
 public:
-  WelcomeScene(GLFWwindow *window) : Scene(window) {
+  WelcomeScene() : Scene() {
     float x = -0.8f, y = 0.0f;
     for (const char &ch : "Welcome") {
       Letter *letter = Letter::factory::GetNewInstance(ch, x, y, 0.2f, 0.15f);
@@ -17,12 +17,10 @@ public:
       letters_.push_back(letter);
       items_.push_back(letter);
     }
-    r_ = g_ = b_ = 0.0f;
+    bg_color_ = {};
   }
 
   void Update(const UpdateProtos &update_protos) override {}
-
-  void ProcessInput() override {}
 
   std::vector<Letter *> letters_;
 };

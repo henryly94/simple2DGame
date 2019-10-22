@@ -34,39 +34,55 @@ private:
         boost::asio::buffer(data_, max_length),
         [this, self](boost::system::error_code ec, std::size_t length) {
           if (!ec) {
+            std::cout.write(data_, length);
+            std::cout << '\n';
+
             UpdateProtos protos;
+            /*
             protos.ParseFromArray(data_, length);
             std::string id = protos.updates(0).id();
-
-            do_write(std::move(protos), protos.ByteSizeLong());
+            */
+            do_write(std::move(protos), length);
           }
         });
   }
 
   void do_write(UpdateProtos &&protos, std::size_t length) {
     auto self(shared_from_this());
+    /*
     {
       boost::mutex::scoped_lock(*mu_);
       protos_->add_updates()->Swap(protos.mutable_updates(0));
     }
-    if (protos_->updates_size() == 2) {
-      protos_->SerializeToArray(data_, length);
-      message_length_ = length;
-      boost::asio::async_write(
-          socket_, boost::asio::buffer(&message_length_, sizeof(size_t)),
-          [this, self](boost::system::error_code ec, std::size_t) {
-            boost::asio::async_write(
-                socket_, boost::asio::buffer(data_, message_length_),
-                [this, self](boost::system::error_code ec,
-                             std::size_t /*length*/) {
-                  if (!ec) {
-                    do_read();
-                  }
-                });
-          });
-    } else {
-      do_read();
-    }
+    */
+    // if (protos_->updates_size() == 2) {
+    // protos_->SerializeToArray(data_, length);
+    // message_length_ = length;
+    boost::asio::async_write(
+        socket_, boost::asio::buffer(data_, length),
+        [this, self](boost::system::error_code ec, std::size_t) {
+          if (!ec) {
+            do_read();
+          }
+        });
+    /*
+    boost::asio::async_write(
+        socket_, boost::asio::buffer(&message_length_, sizeof(size_t)),
+        [this, self](boost::system::error_code ec, std::size_t) {
+          std::cout << "Success\n";
+          boost::asio::async_write(socket_,
+                                   boost::asio::buffer(data_, message_length_),
+                                   [this, self](boost::system::error_code ec,
+                                                std::size_t ) {
+      if (!ec) {
+        do_read();
+      }
+    });
+  });
+  */
+    //} else {
+    //  do_read();
+    //}
   }
 
   tcp::socket socket_;

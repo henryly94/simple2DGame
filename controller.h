@@ -15,19 +15,24 @@
 
 class Controller {
 public:
-  Controller(GLFWwindow *window);
+  Controller(GLFWwindow *window, boost::asio::io_context *io, std::string id);
   ~Controller();
 
-  void ProcessInput(std::string &id);
+  void ProcessInput();
 
   void ClearUpdates();
+
+  void Stop();
 
   GLFWwindow *window_;
   UpdateProtos update_protos_;
   Scene *current_scene_;
   absl::flat_hash_map<std::string, Scene *> scene_map_;
+  std::string id_;
+  bool live_;
 
-  boost::asio::io_context io_;
+  boost::asio::io_context *io_;
+  boost::asio::steady_timer timer_;
   boost::asio::ip::tcp::socket s_;
   boost::asio::ip::tcp::resolver resolver_;
   char write_buf_[1024], read_buf_[1024];
