@@ -153,11 +153,9 @@ void Renderer::renderItem(const GameItem *item) {
   case GameItem::LETTER:
     glUniform2f(glGetUniformLocation(shader_program, "pos"), item->x_,
                 item->y_);
-    // glUniform3f(glGetUniformLocation(shader_program, "color"),
-    //            item->color_.data[0], item->color_.data[1],
-    //            item->color_.data[2]);
-    glUniform3f(glGetUniformLocation(shader_program, "color"), 1.0f, 1.0f,
-                1.0f);
+    glUniform3f(glGetUniformLocation(shader_program, "fontColor"),
+                item->color_.data[0], item->color_.data[1],
+                item->color_.data[2]);
     glUniform1i(glGetUniformLocation(shader_program, "texture1"), 0);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, Texture::Get(item->texture_id_));
