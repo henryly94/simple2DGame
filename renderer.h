@@ -15,7 +15,7 @@
 
 class Renderer {
 public:
-  Renderer(GLFWwindow *window, boost::asio::io_context *io);
+  Renderer(GLFWwindow *window);
 
   ~Renderer();
 
@@ -24,8 +24,6 @@ public:
   void SwitchScene(absl::string_view scene_name);
 
   void Render();
-
-  void Stop();
 
 private:
   void renderItem(const GameItem *item);
@@ -37,9 +35,6 @@ private:
   absl::flat_hash_map<std::string, Scene *> scene_map_;
   Scene *current_scene_ = nullptr;
   GLFWwindow *window_ = nullptr;
-  boost::asio::io_context *io_;
-  boost::asio::steady_timer timer_;
-  bool live_;
 };
 
 #endif // RENDERER_H_

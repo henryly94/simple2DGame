@@ -35,8 +35,8 @@ private:
   Controller *controller_;
   Scene *current_scene_;
 
-  boost::asio::io_context network_io_, render_io_;
-  boost::thread *network_thread_ptr_, *render_thread_ptr_;
+  boost::asio::io_context network_io_;
+  boost::thread *network_thread_ptr_;
 };
 
 #endif // GAME_H

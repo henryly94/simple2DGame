@@ -16,7 +16,6 @@ Controller::Controller(GLFWwindow *window, boost::asio::io_context *io,
 Controller::~Controller() {}
 
 void Controller::ProcessInput() {
-  std::cout << "Controller\n";
   update_protos_.clear_updates();
   UpdateProto updateProto;
   updateProto.set_id(id_);
@@ -60,12 +59,9 @@ void Controller::ProcessInput() {
   size_t size = update_protos_.ByteSizeLong();
   update_protos_.SerializeToArray(write_buf_, size);
   boost::asio::write(s_, boost::asio::buffer(write_buf_, size));
-  std::cout << "1\n";
   // size_t reply_size;
   // boost::asio::read(s_, boost::asio::buffer(&reply_size, sizeof(size_t)));
-  std::cout << size << " 2\n";
   boost::asio::read(s_, boost::asio::buffer(read_buf_, size));
-  std::cout << "3\n";
   UpdateProtos protos;
   protos.ParseFromArray(read_buf_, size);
   log_counter_++;
@@ -73,9 +69,7 @@ void Controller::ProcessInput() {
     std::cout << protos.DebugString();
     std::cout << '\n';
   }
-  std::cout << "a\n";
-  // boost::mutex::scoped_lock(current_scene_->mu_);
-  std::cout << "s\n";
+  boost::mutex::scoped_lock(current_scene_->mu_);
   current_scene_->Update(protos);
   if (live_) {
     timer_.expires_at(timer_.expiry() + boost::asio::chrono::milliseconds(10));

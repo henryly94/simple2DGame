@@ -68,11 +68,7 @@ unsigned int BindLetterVAO(char ch, float w, float h) {
 
 } // namespace
 
-Renderer::Renderer(GLFWwindow *window, boost::asio::io_context *io)
-    : window_(window), io_(io),
-      timer_(*io_, boost::asio::chrono::milliseconds(160)), live_(true) {
-  timer_.async_wait(boost::bind(&Renderer::Render, this));
-}
+Renderer::Renderer(GLFWwindow *window) : window_(window) {}
 
 Renderer::~Renderer() {}
 
@@ -88,25 +84,18 @@ void Renderer::SwitchScene(absl::string_view scene_name) {
 }
 
 void Renderer::Render() {
-  std::cout << "Renderer\n";
-  if (live_) {
-    if (current_scene_ != nullptr) {
-      std::cout << "q\n";
-      // boost::mutex::scoped_lock(current_scene_->mu_);
-      std::cout << "x\n";
-      glClearColor(current_scene_->bg_color_.data[0],
-                   current_scene_->bg_color_.data[1],
-                   current_scene_->bg_color_.data[2], 1.0f);
-      glClear(GL_COLOR_BUFFER_BIT);
-      for (auto it = current_scene_->items_.crbegin();
-           it != current_scene_->items_.crend(); it++) {
-        renderItem(*it);
-      }
-      glfwSwapBuffers(window_);
-      glfwPollEvents();
+  if (current_scene_ != nullptr) {
+    boost::mutex::scoped_lock(current_scene_->mu_);
+    glClearColor(current_scene_->bg_color_.data[0],
+                 current_scene_->bg_color_.data[1],
+                 current_scene_->bg_color_.data[2], 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    for (auto it = current_scene_->items_.crbegin();
+         it != current_scene_->items_.crend(); it++) {
+      renderItem(*it);
     }
-    timer_.expires_at(timer_.expiry() + boost::asio::chrono::milliseconds(33));
-    timer_.async_wait(boost::bind(&Renderer::Render, this));
+    glfwSwapBuffers(window_);
+    glfwPollEvents();
   }
 }
 
@@ -164,9 +153,11 @@ void Renderer::renderItem(const GameItem *item) {
   case GameItem::LETTER:
     glUniform2f(glGetUniformLocation(shader_program, "pos"), item->x_,
                 item->y_);
-    glUniform3f(glGetUniformLocation(shader_program, "color"),
-                item->color_.data[0], item->color_.data[1],
-                item->color_.data[2]);
+    // glUniform3f(glGetUniformLocation(shader_program, "color"),
+    //            item->color_.data[0], item->color_.data[1],
+    //            item->color_.data[2]);
+    glUniform3f(glGetUniformLocation(shader_program, "color"), 1.0f, 1.0f,
+                1.0f);
     glUniform1i(glGetUniformLocation(shader_program, "texture1"), 0);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, Texture::Get(item->texture_id_));
@@ -180,5 +171,3 @@ void Renderer::renderItem(const GameItem *item) {
     break;
   };
 }
-
-void Renderer::Stop() { live_ = false; }

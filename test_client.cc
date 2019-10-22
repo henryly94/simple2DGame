@@ -24,10 +24,10 @@ int main(int argc, char *argv[]) {
       return 1;
     }
 
-    boost::asio::io_context io_context;
+    boost::asio::io_context io;
 
-    tcp::socket s(io_context);
-    tcp::resolver resolver(io_context);
+    tcp::socket s(io);
+    tcp::resolver resolver(io);
     boost::asio::connect(s, resolver.resolve(argv[1], argv[2]));
 
     std::cout << "Enter message: ";

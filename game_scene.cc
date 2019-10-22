@@ -7,7 +7,7 @@ void updateBall(GameItem *item) {
   if (item->vx_ == 0 && item->vy_ == 0) {
     item->ax_ = item->ay_ = 0;
   } else {
-    float ai = 0.00008f;
+    float ai = 0.00006f;
     float norm = std::sqrt(item->vx_ * item->vx_ + item->vy_ * item->vy_);
     float cos = -item->vx_ / norm;
     float sin = -item->vy_ / norm;
@@ -141,7 +141,9 @@ void GameScene::loadItems() {
   items_.push_back(line);
 
   point1_ = Letter::factory::GetNewInstance('0', -0.85f, 0.8f, 0.15f, 0.2f);
+  point1_->color_ = {1.0f, 1.0f, 1.0f};
   point2_ = Letter::factory::GetNewInstance('0', -0.85f, -0.8f, 0.15f, 0.2f);
+  point2_->color_ = {1.0f, 1.0f, 1.0f};
   items_.push_back(point1_);
   items_.push_back(point2_);
 }

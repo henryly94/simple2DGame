@@ -129,10 +129,11 @@ add_executable(
 target_link_libraries(
   test_server
   message_pb
+  ${Boost_LIBRARIES}
 )
 
-add_executable(
-  test_client
-  test_client.cc
-)
+#add_executable(
+#  test_client
+#  test_client.cc
+#)
 

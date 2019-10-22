@@ -17,7 +17,7 @@ public:
       letters_.push_back(letter);
       items_.push_back(letter);
     }
-    bg_color_ = {};
+    bg_color_ = {1.0f, 1.0f, 1.0f};
   }
 
   void Update(const UpdateProtos &update_protos) override {}
