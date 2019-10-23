@@ -10,6 +10,9 @@
 #include <string>
 
 #include <boost/asio.hpp>
+#include <boost/thread/thread.hpp>
+
+#include "message_queue.h"
 
 #include "message.pb.h"
 
@@ -23,6 +26,8 @@ public:
 
   void ClearUpdates();
 
+  void Read();
+
   void Stop();
 
   GLFWwindow *window_;
@@ -32,8 +37,11 @@ public:
   std::string id_;
   bool live_;
 
+  MessageQueue<UpdateProtos> mq_;
+
+  boost::thread *t_;
   boost::asio::io_context *io_;
-  boost::asio::steady_timer timer_;
+  boost::asio::steady_timer timer_, read_timer_;
   boost::asio::ip::tcp::socket s_;
   boost::asio::ip::tcp::resolver resolver_;
   unsigned int log_counter_ = 0;

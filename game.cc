@@ -81,6 +81,7 @@ void Game::MainLoop() {
     processInput();
 
     render();
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(33));
   }
   controller_->Stop();
   network_thread_ptr_->join();

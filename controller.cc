@@ -1,16 +1,26 @@
 #include "controller.h"
 
-#include <boost/thread/thread.hpp>
-
 #include "message.pb.h"
 
 Controller::Controller(GLFWwindow *window, boost::asio::io_context *io,
                        std::string id, std::string ip, std::string port)
     : window_(window), io_(io), s_(*io_),
-      timer_(*io, boost::asio::chrono::milliseconds(10)), resolver_(*io_),
+      timer_(*io, boost::asio::chrono::milliseconds(33)),
+      read_timer_(*io, boost::asio::chrono::milliseconds(33)), resolver_(*io_),
       id_(id), live_(true) {
   boost::asio::connect(s_, resolver_.resolve(ip, port));
   timer_.async_wait(boost::bind(&Controller::ProcessInput, this));
+  read_timer_.async_wait(boost::bind(&Controller::Read, this));
+  t_ = new boost::thread([this]() {
+    while (true) {
+      UpdateProtos *updates;
+      while ((updates = mq_.Pop()) != nullptr) {
+        current_scene_->Update(*updates);
+        delete updates;
+      }
+      boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
+    }
+  });
 }
 
 Controller::~Controller() {}
@@ -32,17 +42,23 @@ void Controller::ProcessInput() {
   size_t size = update_proto.ByteSizeLong();
   update_proto.SerializeToArray(write_buf_, size);
   boost::asio::write(s_, boost::asio::buffer(write_buf_, size));
+  if (live_) {
+    timer_.expires_at(timer_.expiry() + boost::asio::chrono::milliseconds(33));
+    timer_.async_wait(boost::bind(&Controller::ProcessInput, this));
+  }
+}
+
+void Controller::Read() {
   size_t reply_size;
   boost::asio::read(s_, boost::asio::buffer(&reply_size, sizeof(size_t)));
   boost::asio::read(s_, boost::asio::buffer(read_buf_, reply_size));
-  UpdateProtos protos;
-  protos.ParseFromArray(read_buf_, reply_size);
-  log_counter_++;
-  boost::mutex::scoped_lock(current_scene_->mu_);
-  current_scene_->Update(protos);
+  UpdateProtos *protos = new UpdateProtos;
+  protos->ParseFromArray(read_buf_, reply_size);
+  mq_.Push(protos);
+
   if (live_) {
-    timer_.expires_at(timer_.expiry() + boost::asio::chrono::milliseconds(5));
-    timer_.async_wait(boost::bind(&Controller::ProcessInput, this));
+    timer_.expires_at(timer_.expiry() + boost::asio::chrono::milliseconds(33));
+    timer_.async_wait(boost::bind(&Controller::Read, this));
   }
 }
 

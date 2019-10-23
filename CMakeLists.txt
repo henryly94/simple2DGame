@@ -143,3 +143,12 @@ target_link_libraries(
 #  test_client.cc
 #)
 
+
+add_executable(
+  test
+  test.cc
+)
+target_link_libraries(
+  test
+  ${Boost_LIBRARIES}
+)
