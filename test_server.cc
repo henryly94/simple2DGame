@@ -8,6 +8,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
+#include "game_scene.h"
+#include "message.pb.h"
 #include <boost/asio.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/thread.hpp>
@@ -16,14 +18,12 @@
 #include <memory>
 #include <utility>
 
-#include "message.pb.h"
-
 using boost::asio::ip::tcp;
 
 class session : public std::enable_shared_from_this<session> {
 public:
-  session(tcp::socket socket, UpdateProtos *protos, boost::mutex *mu)
-      : socket_(std::move(socket)), protos_(protos), mu_(mu) {}
+  session(tcp::socket socket, GameScene *game_scene)
+      : socket_(std::move(socket)), game_scene_(game_scene) {}
 
   void start() { do_read(); }
 
@@ -34,60 +34,46 @@ private:
         boost::asio::buffer(data_, max_length),
         [this, self](boost::system::error_code ec, std::size_t length) {
           if (!ec) {
-            std::cout.write(data_, length);
-            std::cout << '\n';
-
-            UpdateProtos protos;
-            /*
-            protos.ParseFromArray(data_, length);
-            std::string id = protos.updates(0).id();
-            */
-            do_write(std::move(protos), length);
+            UpdateProto proto;
+            proto.ParseFromArray(data_, length);
+            // std::cout << ">> " << proto.DebugString() << std::endl;
+            do_write(std::move(proto));
           }
         });
   }
 
-  void do_write(UpdateProtos &&protos, std::size_t length) {
+  void do_write(UpdateProto &&proto) {
     auto self(shared_from_this());
-    /*
     {
-      boost::mutex::scoped_lock(*mu_);
-      protos_->add_updates()->Swap(protos.mutable_updates(0));
+      boost::mutex::scoped_lock(game_scene_->mu_);
+      game_scene_->Update(proto);
+      message_length_ = game_scene_->protos_.ByteSizeLong();
+      game_scene_->protos_.SerializeToArray(data_, message_length_);
     }
-    */
     // if (protos_->updates_size() == 2) {
     // protos_->SerializeToArray(data_, length);
-    // message_length_ = length;
-    boost::asio::async_write(
-        socket_, boost::asio::buffer(data_, length),
-        [this, self](boost::system::error_code ec, std::size_t) {
-          if (!ec) {
-            do_read();
-          }
-        });
-    /*
+    // std::cout << ">>" << game_scene_->protos_.DebugString();
     boost::asio::async_write(
         socket_, boost::asio::buffer(&message_length_, sizeof(size_t)),
         [this, self](boost::system::error_code ec, std::size_t) {
-          std::cout << "Success\n";
-          boost::asio::async_write(socket_,
-                                   boost::asio::buffer(data_, message_length_),
-                                   [this, self](boost::system::error_code ec,
-                                                std::size_t ) {
-      if (!ec) {
-        do_read();
-      }
-    });
-  });
-  */
+          boost::asio::async_write(
+              socket_, boost::asio::buffer(data_, message_length_),
+              [this, self](boost::system::error_code ec, std::size_t) {
+                if (!ec) {
+                  do_read();
+                }
+              });
+        });
     //} else {
     //  do_read();
     //}
   }
 
   tcp::socket socket_;
-  boost::mutex *mu_;
   UpdateProtos *protos_;
+  GameScene *game_scene_;
+  boost::mutex mu_;
+  boost::thread *t_;
   size_t message_length_;
   enum { max_length = 1024 };
   char data_[max_length];
@@ -101,19 +87,22 @@ public:
   }
 
 private:
+  int counter = 0;
   void do_accept() {
-    acceptor_.async_accept([this](boost::system::error_code ec,
-                                  tcp::socket socket) {
-      if (!ec) {
-        std::make_shared<session>(std::move(socket), &protos_, &mu_)->start();
-      }
+    acceptor_.async_accept(
+        [this](boost::system::error_code ec, tcp::socket socket) {
+          if (!ec) {
+            counter++;
+            std::cout << "Accept: " << counter << std::endl;
+            std::make_shared<session>(std::move(socket), &game_scene_)->start();
+          }
 
-      do_accept();
-    });
+          do_accept();
+        });
   }
 
   boost::mutex mu_;
-  UpdateProtos protos_;
+  GameScene game_scene_;
   tcp::acceptor acceptor_;
 };
 

@@ -15,7 +15,8 @@
 
 class Controller {
 public:
-  Controller(GLFWwindow *window, boost::asio::io_context *io, std::string id);
+  Controller(GLFWwindow *window, boost::asio::io_context *io, std::string id,
+             std::string ip, std::string port);
   ~Controller();
 
   void ProcessInput();
@@ -35,8 +36,8 @@ public:
   boost::asio::steady_timer timer_;
   boost::asio::ip::tcp::socket s_;
   boost::asio::ip::tcp::resolver resolver_;
-  char write_buf_[1024], read_buf_[1024];
   unsigned int log_counter_ = 0;
+  char write_buf_[1024], read_buf_[1024];
 };
 
 #endif // CONTROLLER_H_

@@ -12,7 +12,7 @@
 
 class Game {
 public:
-  Game(std::string &id);
+  Game(std::string &id, std::string &ip, std::string &port);
   ~Game();
   bool Init();
   void MainLoop();
@@ -29,6 +29,8 @@ private:
   int height_;
   int width_;
   std::string id_;
+  std::string ip_;
+  std::string port_;
   std::vector<Scene *> scenes_;
   GLFWwindow *window_;
   Renderer *renderer_;

@@ -22,6 +22,8 @@ public:
 
   void Update(const UpdateProtos &update_protos) override {}
 
+  void Update(const UpdateProto &update_proto) override {}
+
   std::vector<Letter *> letters_;
 };
 

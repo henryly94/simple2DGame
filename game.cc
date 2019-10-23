@@ -20,8 +20,8 @@
 #include <freetype/fttrigon.h>
 #include FT_FREETYPE_H
 
-Game::Game(std::string &id)
-    : height_(640), width_(640), id_(id), network_io_() {}
+Game::Game(std::string &id, std::string &ip, std::string &port)
+    : height_(640), width_(640), id_(id), ip_(ip), port_(port), network_io_() {}
 
 Game::~Game() {
   for (auto *scene : scenes_) {
@@ -54,7 +54,7 @@ bool Game::Init() {
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   renderer_ = new Renderer(window_);
-  controller_ = new Controller(window_, &network_io_, id_);
+  controller_ = new Controller(window_, &network_io_, id_, ip_, port_);
   Shader::Bind("simple", "../shaders/simple.vs", "../shaders/simple.fs");
   Shader::Bind("letter", "../shaders/letter.vs", "../shaders/letter.fs");
 
