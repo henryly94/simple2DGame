@@ -118,11 +118,11 @@ target_link_libraries(
 )
 
 add_executable(
-  main
-  main.cc
+  game_client
+  game_client_main.cc
 )
 target_link_libraries(
-  main
+  game_client
   game
 )
 

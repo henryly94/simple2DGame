@@ -56,7 +56,9 @@ void Controller::Write() {
   if (update == nullptr) {
     boost::asio::steady_timer write_timer(
         *io_, boost::asio::chrono::milliseconds(10));
-    write_timer.async_wait(boost::bind(&Controller::Write, this));
+    if (live_) {
+      write_timer.async_wait(boost::bind(&Controller::Write, this));
+    }
   } else {
     write_counter_++;
     size_t size = update->ByteSizeLong();
@@ -65,7 +67,9 @@ void Controller::Write() {
     boost::asio::async_write(
         s_, boost::asio::buffer(write_buf_, size + sizeof(size_t)),
         [this, self](boost::system::error_code ec, std::size_t /*length*/) {
-          Write();
+          if (live_) {
+            Write();
+          }
         });
     delete update;
   }
@@ -91,25 +95,14 @@ void Controller::Read() {
             current_frame_id_ = updates.frame_id();
             current_scene_->Update(updates);
           }
-          Read();
+          if (live_) {
+            Read();
+          }
         }
       });
 }
 
 void Controller::Update() {
-  /*
-  UpdateProtos *tmp = mqs_.Pop(), *updates = nullptr;
-  if (tmp != nullptr) {
-    while (tmp != nullptr) {
-      if (updates != nullptr) {
-        delete updates;
-      }
-      updates = tmp;
-      tmp = mqs_.Pop();
-    }
-    current_scene_->Update(*updates);
-  }
-  */
   UpdateProtos *updates = mqs_.PopTillEnd();
   if (updates != nullptr) {
     current_scene_->Update(*updates);

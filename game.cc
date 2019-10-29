@@ -85,14 +85,12 @@ void Game::MainLoop() {
   //    boost::bind(&boost::asio::io_context::run, &network_io_));
   while (!glfwWindowShouldClose(window_)) {
     processInput();
-
     render();
-    // boost::this_thread::sleep_for(boost::chrono::milliseconds(33));
   }
   controller_->Stop();
   threads.join_all();
   // network_thread_ptr_->join();
-  // delete network_thread_ptr_;
+  delete network_thread_ptr_;
 }
 
 void Game::processInput() {

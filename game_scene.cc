@@ -66,6 +66,10 @@ void GameScene::Update(const UpdateProtos &update_protos) {
       } else if (update.has_display()) {
         ball_->visible_ = update.display().visible();
       }
+    } else if (update.id() == "point1") {
+      point1_->texture_id_ = update.display().texture_id();
+    } else if (update.id() == "point2") {
+      point2_->texture_id_ = update.display().texture_id();
     }
   }
 }
@@ -135,6 +139,10 @@ void GameScene::Update(const UpdateProto &update) {
       } else if (update->has_display()) {
         update->mutable_display()->set_visible(ball_->visible_);
       }
+    } else if (update->id() == "point1") {
+      update->mutable_display()->set_texture_id(point1_->texture_id_);
+    } else if (update->id() == "point2") {
+      update->mutable_display()->set_texture_id(point2_->texture_id_);
     }
   }
   // auto end_time = absl::Now();
@@ -208,8 +216,18 @@ void GameScene::loadItems() {
 
   point1_ = Letter::factory::GetNewInstance('0', -0.85f, 0.8f, 0.15f, 0.2f);
   point1_->color_ = {1.0f, 1.0f, 1.0f};
+  auto *point1_display_proto = protos_.add_updates();
+  point1_display_proto->set_id("point1");
+  auto *point1_display = point1_display_proto->mutable_display();
+  point1_display->set_visible(true);
+
   point2_ = Letter::factory::GetNewInstance('0', -0.85f, -0.8f, 0.15f, 0.2f);
   point2_->color_ = {1.0f, 1.0f, 1.0f};
+  auto *point2_display_proto = protos_.add_updates();
+  point2_display_proto->set_id("point2");
+  auto *point2_display = point2_display_proto->mutable_display();
+  point2_display->set_visible(true);
+
   items_.push_back(point1_);
   items_.push_back(point2_);
 }

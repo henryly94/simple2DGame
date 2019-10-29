@@ -182,13 +182,14 @@ int main(int argc, char *argv[]) {
 
     server s(io_context, std::atoi(argv[1]));
 
-    boost::thread_group threads;
-    for (int i = 0; i < 4; i++) {
-      threads.create_thread(
-          boost::bind(&boost::asio::io_context::run, &io_context));
-    }
+    // boost::thread_group threads;
+    // for (int i = 0; i < 4; i++) {
+    //  threads.create_thread(
+    //      boost::bind(&boost::asio::io_context::run, &io_context));
+    //}
 
-    threads.join_all();
+    // threads.join_all();
+    io_context.run();
   } catch (std::exception &e) {
     std::cerr << "Exception: " << e.what() << "\n";
   }
