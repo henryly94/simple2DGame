@@ -54,7 +54,8 @@ bool Game::Init() {
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   renderer_ = new Renderer(window_);
-  controller_ = new Controller(window_, &network_io_, id_, ip_, port_);
+  controller_ =
+      std::make_shared<Controller>(window_, &network_io_, id_, ip_, port_);
   Shader::Bind("simple", "../shaders/simple.vs", "../shaders/simple.fs");
   Shader::Bind("letter", "../shaders/letter.vs", "../shaders/letter.fs");
 
@@ -75,17 +76,23 @@ bool Game::Init() {
 }
 
 void Game::MainLoop() {
-  network_thread_ptr_ = new boost::thread(
-      boost::bind(&boost::asio::io_context::run, &network_io_));
+  boost::thread_group threads;
+  for (int i = 0; i < 4; i++) {
+    threads.create_thread(
+        boost::bind(&boost::asio::io_context::run, &network_io_));
+  }
+  // network_thread_ptr_ = new boost::thread(
+  //    boost::bind(&boost::asio::io_context::run, &network_io_));
   while (!glfwWindowShouldClose(window_)) {
     processInput();
 
     render();
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(33));
+    // boost::this_thread::sleep_for(boost::chrono::milliseconds(33));
   }
   controller_->Stop();
-  network_thread_ptr_->join();
-  delete network_thread_ptr_;
+  threads.join_all();
+  // network_thread_ptr_->join();
+  // delete network_thread_ptr_;
 }
 
 void Game::processInput() {

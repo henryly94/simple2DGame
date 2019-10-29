@@ -6,12 +6,12 @@ find_package(OpenGL REQUIRED)
 message(STATUS ${OPENGL_VERSION})
 
 find_package(Boost REQUIRED thread)
-#set(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_STATIC_LIBS ON)
 
 find_package(Protobuf REQUIRED)
 #set(Protobuf_USE_STATIC_LIBS ON)
-#set(PROTOBUF_LIBRARIES
-#  "/usr/local/lib/libprotobuf.a;-lpthread")
+set(PROTOBUF_LIBRARIES
+  "/usr/local/lib/libprotobuf.a;-lpthread")
 protobuf_generate_cpp(MESSAGE_SRC MESSAGE_HDR message.proto)
 
 include_directories(
@@ -127,11 +127,11 @@ target_link_libraries(
 )
 
 add_executable(
-  test_server
-  test_server.cc
+  game_server
+  game_server_main.cc
 )
 target_link_libraries(
-  test_server
+  game_server
   message_pb
   game_scene
   absl::flat_hash_map

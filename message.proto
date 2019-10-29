@@ -24,6 +24,10 @@ message UpdateProto {
     PhysicsProto physics = 2;
     DisplayProto display = 3;
   }
+  optional uint32 frame_id = 4;
 }
 
-message UpdateProtos { repeated UpdateProto updates = 1; }
+message UpdateProtos {
+  repeated UpdateProto updates = 1;
+  optional uint32 frame_id = 2;
+}

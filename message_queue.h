@@ -16,12 +16,28 @@ public:
   // Try to get a message from queue, return nullptr if not available.
   Message *Pop() {
     boost::mutex::scoped_lock(mu_);
-    if (current_read_ == current_write_) {
+    if (current_length_ == 0) {
       return nullptr;
     }
     Message *ret = queue_[current_read_];
+    queue_[current_read_] = nullptr;
     current_read_ = (current_read_ + 1) % queue_size_;
     current_length_--;
+    return ret;
+  }
+
+  Message *PopTillEnd() {
+    boost::mutex::scoped_lock(mu_);
+    Message *ret = nullptr;
+    while (current_length_ != 0) {
+      if (ret != nullptr) {
+        delete ret;
+      }
+      ret = queue_[current_read_];
+      queue_[current_read_] = nullptr;
+      current_read_ = (current_read_ + 1) % queue_size_;
+      current_length_--;
+    }
     return ret;
   }
 
@@ -31,11 +47,18 @@ public:
       double_size();
     }
     current_length_++;
-    queue_[current_write_++] = message_ptr;
+    queue_[current_write_] = message_ptr;
+    current_write_ = (current_write_ + 1) % queue_size_;
+  }
+
+  bool Empty() {
+    boost::mutex::scoped_lock(mu_);
+    return current_length_ == 0;
   }
 
 private:
   void double_size() {
+    std::cout << queue_size_ << std::endl;
     Message **new_queue_ = new Message *[queue_size_ * 2];
     if (current_read_ <= current_write_) {
       std::copy(queue_ + current_read_, queue_ + current_write_, new_queue_);

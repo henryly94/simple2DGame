@@ -1,13 +1,15 @@
 #include "game_scene.h"
 #include "physics.h"
 
+#include <absl/time/time.h>
+
 namespace {
 
 void updateBall(GameItem *item) {
   if (item->vx_ == 0 && item->vy_ == 0) {
     item->ax_ = item->ay_ = 0;
   } else {
-    float ai = 0.00006f;
+    float ai = 0.00008f;
     float norm = std::sqrt(item->vx_ * item->vx_ + item->vy_ * item->vy_);
     float cos = -item->vx_ / norm;
     float sin = -item->vy_ / norm;
@@ -49,7 +51,7 @@ GameScene::GameScene() : Scene() {
 */
 
 void GameScene::Update(const UpdateProtos &update_protos) {
-  // std::cout << update_protos.DebugString();
+  boost::mutex::scoped_lock(mu_);
   for (const auto update : update_protos.updates()) {
     if (update.id() == "player1") {
       player1_->x_ = update.physics().x();
@@ -69,7 +71,8 @@ void GameScene::Update(const UpdateProtos &update_protos) {
 }
 
 void GameScene::Update(const UpdateProto &update) {
-  // std::cout << update.DebugString();
+  boost::mutex::scoped_lock(mu_);
+  // auto begin_time = absl::Now();
   absl::flat_hash_set<GameItem *> to_be_removed;
   if (update.id() == "player1") {
     player1_->vx_ = update.physics().vx();
@@ -117,8 +120,6 @@ void GameScene::Update(const UpdateProto &update) {
     }
   }
 
-  // std::cout << "Before: " << protos_.DebugString();
-  // std::cout << "Delta: " << update.DebugString();
   for (int i = 0; i < protos_.updates_size(); i++) {
     auto *update = protos_.mutable_updates(i);
     if (update->id() == "player1") {
@@ -136,7 +137,9 @@ void GameScene::Update(const UpdateProto &update) {
       }
     }
   }
-  // std::cout << "After:" << protos_.DebugString();
+  // auto end_time = absl::Now();
+  // auto duration = end_time - begin_time;
+  // std::cout << absl::ToInt64Milliseconds(duration) << std::endl;
 }
 
 void GameScene::loadItems() {
@@ -212,6 +215,7 @@ void GameScene::loadItems() {
 }
 
 void GameScene::RestoreItems() {
+  boost::mutex::scoped_lock(mu_);
   ball_->x_ = 0.0f;
   ball_->y_ = 0.0f;
   ball_->exist_ = true;
@@ -220,4 +224,22 @@ void GameScene::RestoreItems() {
   player1_->y_ = 0.5f;
   player2_->x_ = 0.0f;
   player2_->y_ = -0.5f;
+
+  for (int i = 0; i < protos_.updates_size(); i++) {
+    auto *update = protos_.mutable_updates(i);
+    if (update->id() == "player1") {
+      update->mutable_physics()->set_x(player1_->x_);
+      update->mutable_physics()->set_y(player1_->y_);
+    } else if (update->id() == "player2") {
+      update->mutable_physics()->set_x(player2_->x_);
+      update->mutable_physics()->set_y(player2_->y_);
+    } else if (update->id() == "ball") {
+      if (update->has_physics()) {
+        update->mutable_physics()->set_x(ball_->x_);
+        update->mutable_physics()->set_y(ball_->y_);
+      } else if (update->has_display()) {
+        update->mutable_display()->set_visible(ball_->visible_);
+      }
+    }
+  }
 }

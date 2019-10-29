@@ -34,7 +34,7 @@ private:
   std::vector<Scene *> scenes_;
   GLFWwindow *window_;
   Renderer *renderer_;
-  Controller *controller_;
+  std::shared_ptr<Controller> controller_;
   Scene *current_scene_;
 
   boost::asio::io_context network_io_;
